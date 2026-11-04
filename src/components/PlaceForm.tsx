@@ -11,15 +11,12 @@ import { Colors } from "../constants/colors";
 import ImagePicker from "./ImagePicker";
 import LocationPicker from "./LocationPicker";
 import Button from "./ui/Button";
+import { Place } from "../models/place";
 
 const PlaceForm = ({
   onSavePlace,
 }: {
-  onSavePlace: (placeData: {
-    title: string;
-    imageUri: string;
-    location: { lat: number; lng: number; address: string };
-  }) => void;
+  onSavePlace: (place: Place) => void;
 }) => {
   const [title, setTitle] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -42,11 +39,11 @@ const PlaceForm = ({
       return;
     }
 
-    onSavePlace({
-      title,
-      imageUri: selectedImage,
-      location: pickedLocation,
-    });
+    const { address, ...location } = pickedLocation;
+
+    const newPlace = new Place(title, selectedImage, address, location);
+
+    onSavePlace(newPlace);
   };
 
   const imageTakenHandler = (imageUri: string) => {
