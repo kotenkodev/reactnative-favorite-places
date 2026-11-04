@@ -1,11 +1,26 @@
 import { useCallback, useState } from "react";
-import { View, Text, ScrollView, TextInput, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  StyleSheet,
+  Alert,
+} from "react-native";
 import { Colors } from "../constants/colors";
 import ImagePicker from "./ImagePicker";
 import LocationPicker from "./LocationPicker";
 import Button from "./ui/Button";
 
-const PlaceForm = () => {
+const PlaceForm = ({
+  onSavePlace,
+}: {
+  onSavePlace: (placeData: {
+    title: string;
+    imageUri: string;
+    location: { lat: number; lng: number; address: string };
+  }) => void;
+}) => {
   const [title, setTitle] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [pickedLocation, setPickedLocation] = useState<{
@@ -19,9 +34,19 @@ const PlaceForm = () => {
   };
 
   const savePlaceHandler = () => {
-    console.log("Title:", title);
-    console.log("Selected Image:", selectedImage);
-    console.log("Picked Location:", pickedLocation);
+    if (!title || !selectedImage || !pickedLocation) {
+      Alert.alert(
+        "Incomplete Data",
+        "Please provide a title, image, and location before saving.",
+      );
+      return;
+    }
+
+    onSavePlace({
+      title,
+      imageUri: selectedImage,
+      location: pickedLocation,
+    });
   };
 
   const imageTakenHandler = (imageUri: string) => {
