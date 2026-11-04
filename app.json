@@ -28,6 +28,12 @@
           "icon": "./assets/icon.png",
           "color": "#E6F4FE"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "The app accesses your camera to let you take photos."
+        }
       ]
     ]
   }
