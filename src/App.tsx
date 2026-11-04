@@ -6,6 +6,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import IconButton from "./components/ui/IconButton";
 import { Colors } from "./constants/colors";
 import Map from "./screens/Map";
+import PlaceDetails from "./screens/PlaceDetails";
 import { init } from "./util/database";
 import { useEffect, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
@@ -73,6 +74,11 @@ export default function App() {
             name="Map"
             options={{ title: "View on Map" }}
             component={Map}
+          />
+          <Stack.Screen
+            name="PlaceDetails"
+            component={PlaceDetails}
+            options={{ title: "Loading Place..." }}
           />
         </Stack.Navigator>
       </NavigationContainer>

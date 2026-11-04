@@ -50,3 +50,26 @@ export async function fetchPlaces(): Promise<Place[]> {
       ),
   );
 }
+
+export async function fetchPlaceDetails(id: string): Promise<Place | null> {
+  const dbPlace = await database.getFirstAsync<{
+    id: number;
+    title: string;
+    imageUri: string;
+    address: string;
+    lat: number;
+    lng: number;
+  }>("SELECT * FROM places WHERE id = ?", [id]);
+
+  if (!dbPlace) {
+    return null;
+  }
+
+  return new Place(
+    dbPlace.title,
+    dbPlace.imageUri,
+    dbPlace.address,
+    { lat: dbPlace.lat, lng: dbPlace.lng },
+    dbPlace.id.toString(),
+  );
+}
