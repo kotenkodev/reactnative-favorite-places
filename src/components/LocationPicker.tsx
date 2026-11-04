@@ -14,11 +14,12 @@ import {
   PermissionStatus,
 } from "expo-location";
 import { useState } from "react";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { getMapPreview } from "../util/location";
 
 const LocationPicker = () => {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const [isFetching, setIsFetching] = useState(false);
   const [locationPermissionInformation, requestPermission] =
     useForegroundPermissions();
@@ -26,6 +27,11 @@ const LocationPicker = () => {
     lat: number;
     lng: number;
   } | null>(null);
+
+  const mapPickedLocation = route.params && {
+    lat: route.params.pickedLat,
+    lng: route.params.pickedLng,
+  };
 
   const verifyPermissions = async () => {
     if (
