@@ -17,7 +17,15 @@ export default function AllPlaces({ route }: { route: any }) {
     }
   }, [isFocused, route]);
 
-  return <PlacesList places={loadedPlaces} />;
+  return (
+    <View style={styles.container}>
+      <PlacesList places={loadedPlaces} />
+    </View>
+  );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

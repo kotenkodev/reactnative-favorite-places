@@ -40,7 +40,9 @@
         {
           "locationPermission": "The app accesses your location to let you share your location with others."
         }
-      ]
+      ],
+      "expo-sqlite",
+      "expo-splash-screen"
     ]
   }
 }
