@@ -13,13 +13,26 @@ import {
   useForegroundPermissions,
   PermissionStatus,
 } from "expo-location";
-import { useState } from "react";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import { getMapPreview } from "../util/location";
+import { useEffect, useState } from "react";
+import {
+  useIsFocused,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
+import { getAddress, getMapPreview } from "../util/location";
 
-const LocationPicker = () => {
+const LocationPicker = ({
+  onLocationPicked,
+}: {
+  onLocationPicked: (location: {
+    lat: number;
+    lng: number;
+    address: string;
+  }) => void;
+}) => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const isFocused = useIsFocused();
   const [isFetching, setIsFetching] = useState(false);
   const [locationPermissionInformation, requestPermission] =
     useForegroundPermissions();
@@ -28,10 +41,30 @@ const LocationPicker = () => {
     lng: number;
   } | null>(null);
 
-  const mapPickedLocation = route.params && {
-    lat: route.params.pickedLat,
-    lng: route.params.pickedLng,
-  };
+  useEffect(() => {
+    if (isFocused && route.params) {
+      const mapPickedLocation = {
+        lat: route.params.pickedLat,
+        lng: route.params.pickedLng,
+      };
+
+      setPickedLocation(mapPickedLocation);
+    }
+  }, [route, isFocused]);
+
+  useEffect(() => {
+    const handleLocation = async () => {
+      if (pickedLocation) {
+        const address = await getAddress(
+          pickedLocation.lat,
+          pickedLocation.lng,
+        );
+        onLocationPicked({ ...pickedLocation, address });
+      }
+    };
+
+    handleLocation();
+  }, [pickedLocation, onLocationPicked]);
 
   const verifyPermissions = async () => {
     if (

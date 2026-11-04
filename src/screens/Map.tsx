@@ -33,7 +33,7 @@ export default function Map() {
       return;
     }
 
-    navigation.navigate("AddPlace", {
+    navigation.popTo("AddPlace", {
       pickedLat: selectedLocation.latitude,
       pickedLng: selectedLocation.longitude,
     });
