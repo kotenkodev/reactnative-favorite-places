@@ -1,7 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
 import { useCallback, useLayoutEffect, useState } from "react";
 import { Alert, StyleSheet } from "react-native";
-import MapView, { Marker, UrlTile } from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import IconButton from "../components/ui/IconButton";
 
 export default function Map({ route }: { route?: any }) {
@@ -82,11 +82,6 @@ export default function Map({ route }: { route?: any }) {
       region={region}
       onPress={initialLocation ? undefined : selectLocation}
     >
-      <UrlTile
-        urlTemplate="https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png"
-        maximumZ={19}
-        flipY={false}
-      />
       {selectedLocation && (
         <Marker title="Picked Location" coordinate={selectedLocation} />
       )}

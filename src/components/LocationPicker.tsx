@@ -13,7 +13,7 @@ import {
   useForegroundPermissions,
   PermissionStatus,
 } from "expo-location";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   useIsFocused,
   useNavigation,
@@ -40,31 +40,50 @@ const LocationPicker = ({
     lat: number;
     lng: number;
   } | null>(null);
+  const [pickedAddress, setPickedAddress] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isFocused && route.params) {
-      const mapPickedLocation = {
-        lat: route.params.pickedLat,
-        lng: route.params.pickedLng,
-      };
+  const lastCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
 
-      setPickedLocation(mapPickedLocation);
-    }
-  }, [route, isFocused]);
-
-  useEffect(() => {
-    const handleLocation = async () => {
-      if (pickedLocation) {
-        const address = await getAddress(
-          pickedLocation.lat,
-          pickedLocation.lng,
-        );
-        onLocationPicked({ ...pickedLocation, address });
+  const resolveLocationAndAddress = useCallback(
+    async (lat: number, lng: number) => {
+      setIsFetching(true);
+      setPickedLocation({ lat, lng });
+      try {
+        const address = await getAddress(lat, lng);
+        setPickedAddress(address);
+        onLocationPicked({ lat, lng, address });
+      } catch (error) {
+        console.warn("Failed to resolve address:", error);
+        const fallbackAddress = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        setPickedAddress(fallbackAddress);
+        onLocationPicked({ lat, lng, address: fallbackAddress });
+      } finally {
+        setIsFetching(false);
       }
-    };
+    },
+    [onLocationPicked],
+  );
 
-    handleLocation();
-  }, [pickedLocation, onLocationPicked]);
+  useEffect(() => {
+    if (
+      isFocused &&
+      route.params &&
+      typeof route.params.pickedLat === "number" &&
+      typeof route.params.pickedLng === "number"
+    ) {
+      const lat = route.params.pickedLat;
+      const lng = route.params.pickedLng;
+
+      if (
+        !lastCoordsRef.current ||
+        lastCoordsRef.current.lat !== lat ||
+        lastCoordsRef.current.lng !== lng
+      ) {
+        lastCoordsRef.current = { lat, lng };
+        resolveLocationAndAddress(lat, lng);
+      }
+    }
+  }, [route.params, isFocused, resolveLocationAndAddress]);
 
   const verifyPermissions = async () => {
     if (
@@ -86,6 +105,10 @@ const LocationPicker = ({
   };
 
   const getLocationHandler = async () => {
+    if (isFetching) {
+      return;
+    }
+
     const hasPermission = await verifyPermissions();
 
     if (!hasPermission) {
@@ -95,28 +118,41 @@ const LocationPicker = ({
     setIsFetching(true);
     try {
       const location = await getCurrentPositionAsync();
-      setPickedLocation({
-        lat: location.coords.latitude,
-        lng: location.coords.longitude,
-      });
+      const lat = location.coords.latitude;
+      const lng = location.coords.longitude;
+      lastCoordsRef.current = { lat, lng };
+      setPickedLocation({ lat, lng });
+
+      const address = await getAddress(lat, lng);
+      setPickedAddress(address);
+      onLocationPicked({ lat, lng, address });
     } catch (error) {
       Alert.alert(
         "Could not fetch location!",
         "Please try again later or pick a location on the map.",
       );
+    } finally {
+      setIsFetching(false);
     }
-    setIsFetching(false);
   };
 
   const pickOnMapHandler = () => {
+    if (isFetching) {
+      return;
+    }
     navigation.navigate("Map");
   };
 
-  let locationPreview = <Text>No location picked yet.</Text>;
+  let locationPreview = (
+    <Text style={styles.fallbackText}>No location picked yet.</Text>
+  );
 
   if (isFetching) {
     locationPreview = (
-      <ActivityIndicator size="large" color={Colors.primary500} />
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary500} />
+        <Text style={styles.loadingText}>Fetching location & address...</Text>
+      </View>
     );
   } else if (pickedLocation) {
     locationPreview = (
@@ -130,8 +166,16 @@ const LocationPicker = ({
   }
 
   return (
-    <View>
+    <View style={styles.container}>
       <View style={styles.mapPreview}>{locationPreview}</View>
+      {pickedAddress && !isFetching && (
+        <View style={styles.addressContainer}>
+          <Text style={styles.addressLabel}>Address:</Text>
+          <Text style={styles.addressText} numberOfLines={3}>
+            {pickedAddress}
+          </Text>
+        </View>
+      )}
       <View style={styles.actions}>
         <OutlinedButton name="location" onPress={getLocationHandler}>
           Locate User
@@ -148,6 +192,9 @@ const LocationPicker = ({
 export default LocationPicker;
 
 const styles = StyleSheet.create({
+  container: {
+    marginVertical: 8,
+  },
   mapPreview: {
     marginVertical: 8,
     width: "100%",
@@ -157,6 +204,34 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary100,
     borderRadius: 4,
     overflow: "hidden",
+  },
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+  },
+  loadingText: {
+    color: Colors.primary500,
+    fontSize: 14,
+  },
+  fallbackText: {
+    color: Colors.primary700,
+  },
+  addressContainer: {
+    backgroundColor: Colors.primary100,
+    padding: 8,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  addressLabel: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: Colors.primary500,
+    marginBottom: 2,
+  },
+  addressText: {
+    fontSize: 14,
+    color: Colors.gray700,
   },
   actions: {
     flexDirection: "row",
