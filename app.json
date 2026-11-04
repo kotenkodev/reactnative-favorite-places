@@ -34,6 +34,12 @@
         {
           "cameraPermission": "The app accesses your camera to let you take photos."
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationPermission": "The app accesses your location to let you share your location with others."
+        }
       ]
     ]
   }
