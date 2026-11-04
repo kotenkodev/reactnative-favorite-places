@@ -7,10 +7,13 @@ import IconButton from "../components/ui/IconButton";
 export default function Map({ route }: { route?: any }) {
   const navigation = useNavigation<any>();
 
-  const initialLocation = route?.params && {
-    lat: route.params.initialLat,
-    lng: route.params.initialLng,
-  };
+  const initialLocation =
+    route?.params?.initialLat && route?.params?.initialLng
+      ? {
+          lat: route.params.initialLat,
+          lng: route.params.initialLng,
+        }
+      : undefined;
 
   const [selectedLocation, setSelectedLocation] = useState<{
     latitude: number;
@@ -56,6 +59,9 @@ export default function Map({ route }: { route?: any }) {
 
   useLayoutEffect(() => {
     if (initialLocation) {
+      navigation.setOptions({
+        title: "Location on Map",
+      });
       return;
     }
     navigation.setOptions({
